@@ -12,7 +12,9 @@ class GetDepartmentSerializer(serializers.ModelSerializer):
         model = Department
         fields = '__all__'
 
-class CreateDepartmentSerializer(serializers.ModelSerializer):
+class GetListDepartmentSerializer(serializers.ModelSerializer):
+    building_id = BuildingSerializer()
+
     class Meta:
         model = Department
         fields = '__all__'

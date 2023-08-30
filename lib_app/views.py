@@ -5,14 +5,27 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from .models import Building, Department, Section, Books, Admin, User, Issuence
 from .serializers import *
-
-
-class BuildingList(APIView):
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import ListAPIView
+from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+class BuildingList(ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'address']
+    ordering_fields = ['name', 'address']
     def get(self, request):
         try:
+            paginator = self.pagination_class()
             buildings = Building.objects.all()
-            serializer = BuildingSerializer(buildings, many=True)
-            return Response(serializer.data)
+            queryset = self.filter_queryset(buildings)
+            page = paginator.paginate_queryset(queryset, request)
+            serializer = BuildingSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
         except Exception as ex:
             tb = traceback.format_exc()
             print(tb)
@@ -33,11 +46,9 @@ class BuildingList(APIView):
             return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class BuildingDetails(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     def delete(self, request, id):
-        # try:
-        #     building = Building.objects.get(id=id)
-        # except Building.DoesNotExist:
-        #     return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
         try:
             building = Building.objects.filter(id=id).first()
             if not building:
@@ -84,12 +95,21 @@ class BuildingDetails(APIView):
             return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class DepartmentList(APIView):
+class DepartmentList(ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description', 'code', 'floor', 'building_id__id']
+    ordering_fields = ['name', 'code']
     def get(self, request):
         try:
-            department = Department.objects.all()
-            serializer = CreateDepartmentSerializer(department, many=True)
-            return Response(serializer.data)
+            paginator = self.pagination_class()
+            department = Department.objects.all().order_by("id")
+            queryset = self.filter_queryset(department)
+            page = paginator.paginate_queryset(queryset, request)
+            serializer = GetListDepartmentSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
         except Exception as ex:
             tb = traceback.format_exc()
             print(tb)
@@ -98,7 +118,7 @@ class DepartmentList(APIView):
 
     def post(self, request):
         try:
-            serializer = CreateDepartmentSerializer(data=request.data)
+            serializer = GetListDepartmentSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -110,6 +130,8 @@ class DepartmentList(APIView):
             return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class DepartmentDetails(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     def delete(self, request, id):
         try:
             department = Department.objects.get(id=id)
@@ -131,7 +153,7 @@ class DepartmentDetails(APIView):
             return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            serializer = CreateDepartmentSerializer(department, data=request.data)
+            serializer = GetListDepartmentSerializer(department, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -145,18 +167,27 @@ class DepartmentDetails(APIView):
     def get(self, request, id):
         try:
             department = Department.objects.get(id=id)
-            serializer = CreateDepartmentSerializer(department)
+            serializer = GetListDepartmentSerializer(department)
             return Response(serializer.data)
         except Department.DoesNotExist:
             return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
 
 
-class SectionList(APIView):
+class SectionList(ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'description']
     def get(self, request):
         try:
+            paginator = self.pagination_class()
             section = Section.objects.all()
-            serializer = SectionSerializer(section, many=True)
-            return Response(serializer.data)
+            queryset = self.filter_queryset(section)
+            page = paginator.paginate_queryset(queryset, request)
+            serializer = SectionSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
         except Exception as ex:
             tb = traceback.format_exc()
             print(tb)
@@ -177,6 +208,8 @@ class SectionList(APIView):
             return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class SectionDetails(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     def delete(self, request, id):
         try:
             section = Section.objects.get(id=id)
@@ -217,12 +250,21 @@ class SectionDetails(APIView):
             return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
 
 
-class BookList(APIView):
+class BookList(ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description', 'bar_code', 'writer']
+    ordering_fields = ['name', 'description', 'bar_code', 'writer']
     def get(self, request):
         try:
+            paginator = self.pagination_class()
             book = Books.objects.all()
-            serializer = BooksSerializer(book, many=True)
-            return Response(serializer.data)
+            queryset = self.filter_queryset(book)
+            page = paginator.paginate_queryset(queryset, request)
+            serializer = BooksSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
         except Exception as ex:
             tb = traceback.format_exc()
             print(tb)
@@ -243,6 +285,8 @@ class BookList(APIView):
             return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class BookDetails(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     def delete(self, request, id):
         try:
             book = Books.objects.get(id=id)
@@ -283,12 +327,22 @@ class BookDetails(APIView):
             return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
 
 
-class AdminList(APIView):
+class AdminList(ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'designation', 'phone_number']
+    ordering_fields = ['name', 'designation', 'phone_number']
     def get(self, request):
         try:
+            paginator = self.pagination_class()
             _admin = Admin.objects.all()
-            serializer = AdminSerializer(_admin, many=True)
-            return Response(serializer.data)
+            queryset = self.filter_queryset(_admin)
+            page = paginator.paginate_queryset(queryset, request)
+            serializer = AdminSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
         except Exception as ex:
             tb = traceback.format_exc()
             print(tb)
@@ -310,6 +364,8 @@ class AdminList(APIView):
 
 
 class AdminDetails(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     def delete(self, request, id):
         try:
             admin = Admin.objects.get(id=id)
@@ -350,12 +406,21 @@ class AdminDetails(APIView):
             return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
 
 
-class UserList(APIView):
+class UserList(ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'address', 'email', 'joining_date']
+    ordering_fields = ['name', 'address', 'email', 'joining_date']
     def get(self, request):
         try:
+            paginator = self.pagination_class()
             user = User.objects.all()
-            serializer = UserSerializer(user, many=True)
-            return Response(serializer.data)
+            queryset = self.filter_queryset(user)
+            page = paginator.paginate_queryset(queryset, request)
+            serializer = UserSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
         except Exception as ex:
             tb = traceback.format_exc()
             print(tb)
@@ -375,6 +440,8 @@ class UserList(APIView):
             error_message = str(ex)
             return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 class UserDetails(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     def delete(self, request, id):
         try:
             user = User.objects.get(id=id)
@@ -415,12 +482,21 @@ class UserDetails(APIView):
             return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
 
 
-class IssuenceList(APIView):
+class IssuenceList(ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'address', 'email', 'joining_date']
+    ordering_fields = ['name', 'address', 'email', 'joining_date']
     def get(self, request):
         try:
+            paginator = self.pagination_class()
             issuence = Issuence.objects.all()
-            serializer = IssuenceSerializer(issuence, many=True)
-            return Response(serializer.data)
+            queryset = self.filter_queryset(issuence)
+            page = paginator.paginate_queryset(queryset, request)
+            serializer = IssuenceSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
         except Exception as ex:
             tb = traceback.format_exc()
             print(tb)
@@ -441,6 +517,8 @@ class IssuenceList(APIView):
             return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class IssuenceDetails(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     def delete(self, request, id):
         try:
             issuence = Issuence.objects.get(id=id)
