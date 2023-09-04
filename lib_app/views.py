@@ -11,6 +11,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+
 class BuildingList(ListAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -20,8 +21,13 @@ class BuildingList(ListAPIView):
     ordering_fields = ['name', 'address']
     def get(self, request):
         try:
+            var = self.request.query_params.get('name')
+            print(var)
             paginator = self.pagination_class()
-            buildings = Building.objects.all()
+            if var:
+                buildings = Building.objects.filter(name=var)
+            else:
+                buildings = Building.objects.all()
             queryset = self.filter_queryset(buildings)
             page = paginator.paginate_queryset(queryset, request)
             serializer = BuildingSerializer(page, many=True)
@@ -45,14 +51,15 @@ class BuildingList(ListAPIView):
             error_message = str(ex)
             return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class BuildingDetails(APIView):
+class BuildingDetails(ListAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     def delete(self, request, id):
         try:
-            building = Building.objects.filter(id=id).first()
-            if not building:
-                return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
+            building = Building.objects.get(id=id)
+        except Building.DoesNotExist:
+            return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
+        try:
             building.delete()
             return Response({"details": "Task deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
         except Exception as ex:
@@ -82,17 +89,10 @@ class BuildingDetails(APIView):
     def get(self, request, id):
         try:
             building = Building.objects.get(id=id)
+            serializer = BuildingSerializer(building)
+            return Response(serializer.data)
         except Building.DoesNotExist:
             return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
-        try:
-            buildings = Building.objects.all()
-            serializer = BuildingSerializer(buildings, many=True)
-            return Response(serializer.data)
-        except Exception as ex:
-            tb = traceback.format_exc()
-            print(tb)
-            error_message = str(ex)
-            return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DepartmentList(ListAPIView):
@@ -104,8 +104,13 @@ class DepartmentList(ListAPIView):
     ordering_fields = ['name', 'code']
     def get(self, request):
         try:
+            var = self.request.query_params.get('name')
+            print(var)
             paginator = self.pagination_class()
-            department = Department.objects.all().order_by("id")
+            if var:
+                department = Department.objects.filter(name=var).order_by("id")
+            else:
+                department = Department.objects.all().order_by("id")
             queryset = self.filter_queryset(department)
             page = paginator.paginate_queryset(queryset, request)
             serializer = GetListDepartmentSerializer(page, many=True)
@@ -182,8 +187,13 @@ class SectionList(ListAPIView):
     ordering_fields = ['name', 'description']
     def get(self, request):
         try:
+            var = self.request.query_params.get('name')
+            print(var)
             paginator = self.pagination_class()
-            section = Section.objects.all()
+            if var:
+                section = Section.objects.filter(name=var)
+            else:
+                section = Section.objects.all()
             queryset = self.filter_queryset(section)
             page = paginator.paginate_queryset(queryset, request)
             serializer = SectionSerializer(page, many=True)
@@ -259,8 +269,13 @@ class BookList(ListAPIView):
     ordering_fields = ['name', 'description', 'bar_code', 'writer']
     def get(self, request):
         try:
+            var = self.request.query_params.get('name')
+            print(var)
             paginator = self.pagination_class()
-            book = Books.objects.all()
+            if var:
+                book = Books.objects.filter(name=var)
+            else:
+                book = Books.objects.all()
             queryset = self.filter_queryset(book)
             page = paginator.paginate_queryset(queryset, request)
             serializer = BooksSerializer(page, many=True)
@@ -336,8 +351,13 @@ class AdminList(ListAPIView):
     ordering_fields = ['name', 'designation', 'phone_number']
     def get(self, request):
         try:
+            var = self.request.query_params.get('name')
+            print(var)
             paginator = self.pagination_class()
-            _admin = Admin.objects.all()
+            if var:
+                _admin = Admin.objects.filter(name=var)
+            else:
+                _admin = Admin.objects.all()
             queryset = self.filter_queryset(_admin)
             page = paginator.paginate_queryset(queryset, request)
             serializer = AdminSerializer(page, many=True)
@@ -415,8 +435,13 @@ class UserList(ListAPIView):
     ordering_fields = ['name', 'address', 'email', 'joining_date']
     def get(self, request):
         try:
+            var = self.request.query_params.get('name')
+            print(var)
             paginator = self.pagination_class()
-            user = User.objects.all()
+            if var:
+                user = User.objects.filter(name=var)
+            else:
+                user = User.objects.all()
             queryset = self.filter_queryset(user)
             page = paginator.paginate_queryset(queryset, request)
             serializer = UserSerializer(page, many=True)
@@ -491,8 +516,13 @@ class IssuenceList(ListAPIView):
     ordering_fields = ['name', 'address', 'email', 'joining_date']
     def get(self, request):
         try:
+            var = self.request.query_params.get('status')
+            print(var)
             paginator = self.pagination_class()
-            issuence = Issuence.objects.all()
+            if var:
+                issuence = Issuence.objects.filter(status=var)
+            else:
+                issuence = Issuence.objects.all()
             queryset = self.filter_queryset(issuence)
             page = paginator.paginate_queryset(queryset, request)
             serializer = IssuenceSerializer(page, many=True)
