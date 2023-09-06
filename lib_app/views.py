@@ -21,11 +21,13 @@ class BuildingList(ListAPIView):
     ordering_fields = ['name', 'address']
     def get(self, request):
         try:
-            var = self.request.query_params.get('name')
-            print(var)
+            name = self.request.query_params.get('name')
+            description = self.request.query_params.get('desc')
+            address = self.request.query_params.get('add')
+            floor_Count = self.request.query_params.get('floor')
             paginator = self.pagination_class()
-            if var:
-                buildings = Building.objects.filter(name=var)
+            if name or description or address or floor_Count:
+                buildings = Building.objects.filter(name=name, description=description, address=address, floor_Count=floor_Count)
             else:
                 buildings = Building.objects.all()
             queryset = self.filter_queryset(buildings)
