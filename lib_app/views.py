@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from .models import Building, Department, Section, Books, Admin, User, Issuence
+from .models import Building, Department, Section, Books, Admin, User, Issuence, Subscription, Transaction
 from .serializers import *
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -588,4 +588,165 @@ class IssuenceDetails(APIView):
             serializer = IssuenceSerializer(issuence)
             return Response(serializer.data)
         except Issuence.DoesNotExist:
+            return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class SubscriptionList(ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['start_date', 'end_date']
+    ordering_fields = ['start_date', 'end_date']
+    def get(self, request):
+        try:
+            var = self.request.query_params.get('Start_date')
+            paginator = self.pagination_class()
+            if var:
+                subscription = Subscription.objects.filter(start_date=var)
+            else:
+                subscription = Subscription.objects.all()
+            queryset = self.filter_queryset(subscription)
+            page = paginator.paginate_queryset(queryset, request)
+            serializer = SubscriptionSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except Exception as ex:
+            tb = traceback.format_exc()
+            print(tb)
+            error_message = str(ex)
+            return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def post(self, request):
+        try:
+            serializer = GetSubscriptionSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as ex:
+            tb = traceback.format_exc()
+            print(tb)
+            error_message = str(ex)
+            return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class SubscriptionDetails(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def delete(self, request, id):
+        try:
+            subscription = Subscription.objects.get(id=id)
+        except Subscription.DoesNotExist:
+            return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            subscription.delete()
+            return Response({"details": "Task deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        except Exception as ex:
+            tb = traceback.format_exc()
+            print(tb)
+            error_message = str(ex)
+            return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def put(self, request, id):
+        try:
+            user = Subscription.objects.get(id=id)
+        except Subscription.DoesNotExist:
+            return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            serializer = GetSubscriptionSerializer(user, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as ex:
+            tb = traceback.format_exc()
+            print(tb)
+            error_message = str(ex)
+            return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def get(self, request, id):
+        try:
+            subs = Subscription.objects.get(id=id)
+            serializer = SubscriptionSerializer(subs)
+            return Response(serializer.data)
+        except Subscription.DoesNotExist:
+            return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
+
+class TransactionList(ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['start_date', 'end_date']
+    ordering_fields = ['start_date', 'end_date']
+    def get(self, request):
+        try:
+            var = self.request.query_params.get('method')
+            paginator = self.pagination_class()
+            if var:
+                transaction = Transaction.objects.filter(method=var)
+            else:
+                transaction = Transaction.objects.all()
+            queryset = self.filter_queryset(transaction)
+            page = paginator.paginate_queryset(queryset, request)
+            serializer = TransactionSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except Exception as ex:
+            tb = traceback.format_exc()
+            print(tb)
+            error_message = str(ex)
+            return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def post(self, request):
+        try:
+            serializer = GetTransactionSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as ex:
+            tb = traceback.format_exc()
+            print(tb)
+            error_message = str(ex)
+            return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class TransactionDetails(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def delete(self, request, id):
+        try:
+            transaction = Transaction.objects.get(id=id)
+        except Transaction.DoesNotExist:
+            return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            transaction.delete()
+            return Response({"details": "Task deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        except Exception as ex:
+            tb = traceback.format_exc()
+            print(tb)
+            error_message = str(ex)
+            return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def put(self, request, id):
+        try:
+            user = Transaction.objects.get(id=id)
+        except Transaction.DoesNotExist:
+            return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            serializer = GetTransactionSerializer(user, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as ex:
+            tb = traceback.format_exc()
+            print(tb)
+            error_message = str(ex)
+            return Response({"Error": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def get(self, request, id):
+        try:
+            transaction = Transaction.objects.get(id=id)
+            serializer = TransactionSerializer(transaction)
+            return Response(serializer.data)
+        except Transaction.DoesNotExist:
             return Response({"Details": "Invalid ID"}, status=status.HTTP_404_NOT_FOUND)

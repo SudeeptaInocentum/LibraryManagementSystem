@@ -63,3 +63,26 @@ class IssuenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Issuence
         fields = '__all__'
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    member_id = UserSerializer()
+    class Meta:
+        model = Subscription
+        fields = '__all__'
+
+class GetSubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = '__all__'
+
+class TransactionSerializer(serializers.ModelSerializer):
+    receiver = AdminSerializer()
+    sender = UserSerializer()
+    class Meta:
+        model = Transaction
+        fields = '__all__'
+
+class GetTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = '__all__'

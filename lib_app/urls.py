@@ -22,4 +22,10 @@ urlpatterns = [
 
     path('status/', IssuenceList.as_view()),
     path('status/<int:id>/', IssuenceDetails.as_view()),
+
+    path('subscription/', SubscriptionList.as_view()),
+    path('subscription/<int:id>/', SubscriptionDetails.as_view()),
+
+    path('transaction/', TransactionList.as_view()),
+    path('transaction/<int:id>/', TransactionDetails.as_view()),
 ]
